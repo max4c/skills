@@ -6,17 +6,15 @@ Inspired by [Matt Pocock's skills](https://github.com/mattpocock/skills), the [O
 
 ## What's inside
 
-| Skill | Status | What it does |
-|---|---|---|
-| `grill-me` | v0.1 | Interview the user relentlessly about a plan, spec, or ticket. Produces a per-dimension ambiguity report and gate. |
-| `write-prd` | v0.1 | Turn a vague idea into a grounded PRD. Codebase exploration, Socratic interview, grill gate before exit. |
-| `tdd` | v0.1 | Test-driven development with red-green-refactor discipline and vertical-slice tracer bullets. Includes "when NOT to TDD" for UI code. |
-| `tech-spec` | v0.1 skeleton | Turn a PRD into a technical implementation spec. Module decomposition, sequencing, grill gate. |
-| `verify-before-done` | v0.1 skeleton | Discipline guard — three-level evidence rubric before claiming work is done. |
-| `improve-codebase` | v0.1 skeleton | Architectural review that produces proposals, not commits. Deep-module detection + persona pass. |
-| `design-interface` | v0.1 skeleton | Parallel exploration of UI/UX designs along explicit dimension axes. |
-
-Skills marked "skeleton" have locked structure but need deeper authoring — the phase outlines are there, the specific content has TODO markers.
+| Skill | What it does |
+|---|---|
+| `grill-me` | Interview the user relentlessly about a plan, spec, or ticket. Produces a per-dimension ambiguity report and gate. |
+| `write-prd` | Turn a vague idea into a grounded PRD. Codebase exploration, Socratic interview, grill gate before exit. |
+| `tdd` | Test-driven development with red-green-refactor discipline and vertical-slice tracer bullets. Includes "when NOT to TDD" for UI code. |
+| `tech-spec` | Turn a PRD into a technical implementation spec. Module decomposition with deep-module emphasis, tracer-bullet sequencing, grill gate. |
+| `verify-before-done` | Three-level evidence rubric (Mechanical / Behavioral / Consensus) for proving work is done before claiming it is. Red flag dictionary for false success claims. |
+| `improve-codebase` | Architectural review that produces proposals, not commits. Deep-module detection + four-persona pass (Contrarian / Simplifier / Architect / Hacker). |
+| `design-interface` | Parallel exploration of UI/UX designs along explicit dimension axes. Spawns multiple distinct design corners to avoid anchoring. |
 
 ## Installation
 
