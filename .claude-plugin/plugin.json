@@ -1,0 +1,22 @@
+{
+  "name": "max",
+  "description": "General building skills for Claude Code — grill-me, write-prd, tdd, and more. Project-agnostic skills for turning ideas into verified code. Inspired by Matt Pocock's skills and the Ouroboros specification-first workflow.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Max Forsey",
+    "email": "maxforsey@icloud.com"
+  },
+  "homepage": "https://github.com/max4c/skills",
+  "repository": "https://github.com/max4c/skills",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "prd",
+    "tdd",
+    "grill",
+    "ambiguity-gate",
+    "code-review",
+    "debugging",
+    "verification"
+  ]
+}
