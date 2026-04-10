@@ -15,6 +15,7 @@ Inspired by [Matt Pocock's skills](https://github.com/mattpocock/skills), the [O
 | `verify-before-done` | Three-level evidence rubric (Mechanical / Behavioral / Consensus) for proving work is done before claiming it is. Red flag dictionary for false success claims. |
 | `improve-codebase` | Architectural review that produces proposals, not commits. Deep-module detection + four-persona pass (Contrarian / Simplifier / Architect / Hacker). |
 | `design-interface` | Parallel exploration of UI/UX designs along explicit dimension axes. Spawns multiple distinct design corners to avoid anchoring. |
+| `release-plugin` | Ship a Claude Code plugin update — detect plugin, bump version, update CHANGELOG, stage surgically, commit, push, merge to default branch via worktree. Encodes the version-bump discipline that makes `/plugin update` actually land. |
 
 ## Installation
 

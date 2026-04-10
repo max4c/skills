@@ -1,5 +1,32 @@
 # Changelog
 
+## v0.4.0 — 2026-04-10
+
+Added `release-plugin` — a new skill that encodes the discipline of shipping Claude Code plugin updates. Born from the pain of learning (the hard way) that the plugin updater gates on the `version` field in `plugin.json`, not git SHAs, and that bugbook-style multi-branch repos with ongoing WIP need a worktree to avoid disturbing working state.
+
+### Added
+
+- **release-plugin** — Detects the plugin from cwd, recommends patch/minor/major version bump from the diff, updates plugin.json + CHANGELOG, stages surgically (specific paths in WIP repos), commits, pushes, merges to default branch via worktree when needed, and prints the `/plugin update` + `/reload-plugins` commands for the user to run in Claude Code. Pairs naturally with `verify-before-done` (run before release) and `grill-me` (run on hand-wavy CHANGELOG entries).
+
+## v0.3.0 — 2026-04-10
+
+Post-publication review against the skill-creator best-practices rubric.
+
+### Changed
+
+- **grill-me, verify-before-done, tdd** — Description "pushiness" to fight undertriggering. Descriptions now include explicit "use this skill whenever..." framing with broader trigger contexts.
+- **write-prd, tech-spec** — Added concrete filled-in examples using the "Cmd+K focuses search bar" feature to anchor the target quality bar.
+- **verify-before-done** — Added "When to use this vs. max:tdd" table clarifying the overlap with the tdd skill.
+- **grill-me** — Added a Composition section listing all callers so the model sees the ecosystem when the skill loads in isolation.
+
+### Added
+
+- **`.claude-plugin/marketplace.json`** — Standalone marketplace manifest so `/plugin install max@max4c-skills` works predictably without relying on plugin-system auto-detection.
+
+### Fixed
+
+- **README install syntax** — Removed incorrect `github:` prefix from install commands. Corrected to `plugin@marketplace-name` format matching Claude Code's actual install command shape.
+
 ## v0.2.0 — 2026-04-10
 
 All seven skills now fully authored. Skeletons filled in with concrete content, examples, and anti-patterns.
