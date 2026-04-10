@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: Interview the user relentlessly about a plan, spec, or ticket until every branch of the decision tree is resolved. Produces an ambiguity report with per-dimension scores and an aggregate gate. Use when the user says "grill me", wants to stress-test a design, or when invoked as a subroutine by a caller that needs active interrogation (bugbook:flow Phase 2d for spec mode, bugbook:prep Phase 3 for ticket mode).
+description: Interview the user relentlessly about a plan, spec, or ticket until every branch of the decision tree is resolved. Produces a per-dimension ambiguity report (Goals / Acceptance / Boundaries / Alternatives / Assumptions) and an aggregate gate. Use this skill whenever the user is drafting a spec, proposing a design, debating an approach, or describing work to hand off — even if they don't say "grill me". Explicit triggers include "grill me", "stress-test this", "am I missing anything", "what are the risks", or any time a non-trivial plan is being finalized. Also invoked as a subroutine by max:write-prd Phase 5, max:tech-spec Phase 6, max:improve-codebase Phase 5, bugbook:flow Phase 2d, bugbook:prep Phase 3, and bugbook:ticket Phase 2d.
 ---
 
 # Grill Me
@@ -12,6 +12,19 @@ Ask one question at a time. If a question can be answered by exploring the codeb
 The goal: a spec, ticket, or plan that an agent with zero context could execute without asking the user anything.
 
 ---
+
+## Composition
+
+This skill is designed to be called directly by the user AND invoked as a subroutine by other skills that need active interrogation. Known callers:
+
+- `max:write-prd` — Phase 5 grill gate against the drafted PRD
+- `max:tech-spec` — Phase 6 grill gate against the drafted tech spec
+- `max:improve-codebase` — Phase 5 grill gate against the architectural proposal
+- `bugbook:flow` — Phase 2d spec grill (via `max:write-prd`, indirectly) plus fallback direct invocation
+- `bugbook:prep` — Phase 3 ticket grill for "needs input" tickets
+- `bugbook:ticket` — Phase 2d spec grill for non-trivial feature-tier tickets
+
+When invoked as a subroutine, the caller pre-loads the artifact into the conversation. You detect the mode from context (what's being grilled) and follow the subroutine exit protocol — write resolved answers back to the artifact before returning control to the caller.
 
 ## Modes
 

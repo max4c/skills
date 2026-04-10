@@ -135,6 +135,67 @@ and implications for future work.>
 - If the user pushes back, revise on the spot — don't defer to a later review
 - Keep the language concrete. Avoid "robust", "scalable", "elegant", "clean" — those are decorations, not specs
 
+#### Concrete example of what "good" looks like
+
+A small feature PRD, for a hypothetical "add a Cmd+K shortcut to focus the search bar":
+
+```markdown
+# Cmd+K focuses search bar
+
+## Goals
+
+Give the user a one-key way to jump to the search bar from anywhere in the app.
+The existing path (click the search field in the sidebar) works but breaks flow
+when the user is in the middle of a note. This removes the context switch.
+
+## Requirements
+
+- [ ] Pressing Cmd+K anywhere in the app focuses the search bar
+- [ ] If the search bar isn't visible (sidebar collapsed), show the sidebar first, then focus
+- [ ] The caret lands at the end of any existing search text (not selected, not cleared)
+- [ ] Escape from the focused search bar returns focus to whatever had it before
+- [ ] The shortcut is shown in the Help menu alongside other navigation shortcuts
+
+## Non-Goals
+
+- Not changing the search bar's visual appearance
+- Not adding a command palette (this is just a focus shortcut, not Cmd+K as in VS Code's command menu)
+- Not adding Cmd+K shortcuts for any other UI element — this PRD is for the search bar only
+
+## Constraints
+
+- Cmd+K is currently unbound in Bugbook per a grep of `KeyboardShortcuts` usage — no conflict
+- Focus management in SwiftUI requires @FocusState at the parent view level; the search bar is a child of ContentView, so the @FocusState will live there
+- The sidebar-collapsed case means we need to listen for the shortcut at a higher level than the sidebar itself — probably at ContentView
+
+## Approach
+
+1. Add a `@FocusState` for the search field in ContentView
+2. Add a `.keyboardShortcut("k", modifiers: .command)` to a hidden button or on ContentView itself
+3. In the handler, first ensure the sidebar is visible (check `sidebarVisibility` state), then set the focus state to `.searchField`
+4. For the Escape return-focus behavior, track the previous focus on entry and restore on `.onSubmit` or escape
+
+Follows the existing pattern in `TicketListView` where keyboard shortcuts are attached at the container level, not the input level.
+
+## Open Questions
+
+- Should Cmd+K also clear the current search, or preserve it? (user decision — default: preserve)
+- Does the shortcut need to work when a modal sheet is open? (needs exploration of modal focus behavior)
+
+## Discoveries
+
+<empty — will be populated during execution>
+```
+
+Notice what's concrete in this PRD:
+- Requirements are observable behaviors, not aspirations
+- Non-Goals explicitly rule out scope creep (the command-palette confusion)
+- Constraints cite actual codebase facts (grep result, SwiftUI focus management pattern)
+- Approach references an existing pattern by name (`TicketListView`)
+- Open Questions tag who decides and what needs investigation
+
+That's the target quality bar.
+
 ### Phase 5: Grill gate
 
 Before finalizing, invoke the `grill-me` skill in spec mode against the drafted PRD.

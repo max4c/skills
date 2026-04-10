@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Test-driven development with red-green-refactor discipline and vertical-slice tracer bullets. Use when building features or fixing bugs in testable code, mentions "TDD", "red-green-refactor", "write tests first", or when you want behavior verified through real tests rather than manual smoke tests. Skip for UI code where smoke tests and visual verification are more honest.
+description: Test-driven development with red-green-refactor discipline and vertical-slice tracer bullets. Use this skill whenever the user is building or fixing code in testable layers — parsers, formatters, services, pure functions, data models, CLI commands — even if they don't explicitly say "TDD". Triggers include "add a feature to the parser", "fix a bug in the formatter", "implement this utility", "write tests for X", "test-driven", "red-green-refactor", or any time the user is about to write logic that has a clean public interface. Skip for SwiftUI views, animations, visual polish, and system-framework integrations (EventKit, Core Data) where smoke tests and computer-use verification are more honest — the skill body has a "when NOT to TDD" section explaining the boundary. Use max:verify-before-done for the non-testable cases.
 ---
 
 # TDD

@@ -220,6 +220,108 @@ Anything unresolved that the PRD didn't cover. Tag with who needs to answer.
 
 ---
 
+## Concrete example of what "good" looks like
+
+A small tech spec, for the "Cmd+K focuses search bar" PRD example in `max:write-prd`:
+
+```markdown
+# Cmd+K focuses search bar — Technical Spec
+
+## Context
+
+Implements the PRD at `docs/prds/cmd-k-search-focus.md`. Adds a Cmd+K
+keyboard shortcut that focuses the sidebar search field from anywhere in
+the app, expanding the sidebar first if collapsed.
+
+## Decomposition
+
+- **SearchFocusCoordinator** — owns the focus state and the expand-sidebar-if-needed sequence
+- **ContentView shortcut binding** — attaches the Cmd+K keyboard shortcut at the app-level container
+
+## Modules
+
+### SearchFocusCoordinator
+
+**Responsibility:** Own the search field's focus state and the sequencing logic
+for focusing it even when the sidebar is collapsed.
+
+**Public interface:**
+```swift
+@MainActor
+final class SearchFocusCoordinator: ObservableObject {
+    @Published var isSearchFocused: Bool = false
+
+    func requestFocus()
+    func releaseFocus()
+}
+```
+
+**Invariants:**
+- `requestFocus()` always results in `isSearchFocused == true` after a short delay,
+  regardless of sidebar state
+- The coordinator does not directly manipulate sidebar visibility — it publishes
+  an intent that `ContentView` acts on
+
+**Failure modes:**
+- If the sidebar can't be shown (e.g., a modal sheet is blocking), `requestFocus`
+  is a no-op. The caller is expected to check for blocking state before calling.
+
+**Tests:**
+- `requestFocus` sets `isSearchFocused` to true
+- `releaseFocus` sets it back to false
+- Multiple rapid `requestFocus` calls are idempotent (no focus-stealing loop)
+
+### ContentView shortcut binding
+
+**Responsibility:** Attach the Cmd+K keyboard shortcut at the root SwiftUI view
+so it's available regardless of which child view is focused.
+
+**Public interface:**
+```swift
+// In ContentView body:
+.keyboardShortcut(.init("k"), modifiers: .command, action: { coordinator.requestFocus() })
+```
+
+**Invariants:**
+- The shortcut is active in all app states except when a modal sheet is presented
+  (macOS default behavior for `.keyboardShortcut`)
+
+**Failure modes:**
+- If `coordinator` isn't yet injected into the environment, crash early with a
+  clear error — don't silently no-op
+
+**Tests:**
+- N/A (SwiftUI view code, verify via smoke test per `max:verify-before-done`)
+
+## Sequence
+
+1. **SearchFocusCoordinator** (foundation — pure state object, testable via `max:tdd`)
+2. **ContentView shortcut binding** (tracer — wires coordinator into the view tree)
+   ← END OF TRACER BULLET: Cmd+K focuses search from an expanded sidebar
+3. **Collapsed-sidebar expansion** (fill in — observe `isSearchFocused` at the sidebar level, expand if needed, then focus)
+4. **Escape restores previous focus** (fill in — track prior focus, restore on submit/escape)
+
+The tracer bullet is deliberately thin. Step 2 proves the shortcut-to-focus path works end-to-end with the simplest possible sidebar state (already expanded). Steps 3-4 fill in the edge cases after we know the core wiring is right.
+
+## Open Questions
+
+- How do we track "previous focus" across arbitrary views in SwiftUI? macOS 14+ has
+  `@FocusState` but cross-view restoration isn't built-in. Investigation needed.
+
+## Ambiguity Report
+
+<Appended by grill-me at exit.>
+```
+
+Notice:
+- Each module has a real Swift signature, not a prose description
+- Invariants call out what must always be true
+- Tests distinguish "testable via tdd" vs "smoke test via verify-before-done"
+- Sequence marks the tracer bullet boundary explicitly
+- Open Questions capture what needs investigation, not what the spec author was too lazy to decide
+
+---
+
 ## Anti-patterns
 
 - **Restating the PRD as a tech spec.** If your tech spec just paraphrases the PRD in different words, you haven't added value. Tech specs answer "how", not "what".

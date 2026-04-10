@@ -20,20 +20,22 @@ Inspired by [Matt Pocock's skills](https://github.com/mattpocock/skills), the [O
 
 ### Standalone (just these general skills)
 
-```bash
-/plugin marketplace add github:max4c/skills
-/plugin install max
+```
+/plugin marketplace add max4c/skills
+/plugin install max@max4c-skills
 ```
 
 ### As a companion to the Bugbook plugin
 
-```bash
-/plugin marketplace add github:max4c/bugbook
-/plugin install bugbook
-/plugin install max
+```
+/plugin marketplace add max4c/bugbook
+/plugin install bugbook@max4c-bugbook
+/plugin install max@max4c-bugbook
 ```
 
 The `max4c/bugbook` marketplace bundles both plugins. Installing `max` alongside `bugbook` unlocks active spec grilling and ambiguity scoring inside Bugbook's `/flow`, `/prep`, and `/ticket` workflows.
+
+> The install commands use `plugin@marketplace-name` format. The marketplace names (`max4c-skills` and `max4c-bugbook`) come from the `name` field in each repo's `.claude-plugin/marketplace.json` or `plugin.json`.
 
 ## Composition
 

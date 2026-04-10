@@ -1,6 +1,6 @@
 ---
 name: verify-before-done
-description: Prevent false "it works" claims. Before declaring anything done, fixed, or passing, run the verification that actually proves it. Three-level evidence rubric (Mechanical / Behavioral / Consensus) with red flag detection for common false-success patterns. Use as a discipline guard before commits, PRs, or status updates. Invoke when the user says "verify this", "are you sure it's fixed", or when an agent is about to claim success without evidence.
+description: Prevent false "it works" claims. Before declaring anything done, fixed, or passing, run the verification that actually proves it. Three-level evidence rubric (Mechanical / Behavioral / Consensus) with red flag detection for phrases like "should work", "looks good", "probably passing". Use this skill whenever you or the user is about to claim something is complete, fixed, working, or passing — even if the user hasn't explicitly asked for verification. Triggers include "I fixed it", "it works now", "tests are green", "ready to merge", "deploy it", or any claim of success that lacks an observable signal. Also invoke when reviewing agent output before committing or when an agent is about to set a ticket to Review/Done status.
 ---
 
 # Verify Before Done
@@ -161,9 +161,27 @@ When you catch yourself about to say any of these, stop and go back to the verif
 
 ---
 
+## When to use this vs. `max:tdd`
+
+Both skills cover "prove it works before claiming it works". The split is by what kind of code you're verifying:
+
+| Work type | Use this |
+|---|---|
+| Parser, formatter, pure function, data model | **`max:tdd`** — write failing test, watch it fail, write minimal code, watch it pass |
+| Service with a clean public interface | **`max:tdd`** — same cycle, integration-style tests |
+| SwiftUI view, animation, layout | **`verify-before-done`** — L2 smoke test, can't meaningfully unit-test |
+| System framework integration (EventKit, Core Data) | **`verify-before-done`** — L2 with the real framework |
+| Bug fix where you first reproduce, then fix | **Both** — tdd for the test that reproduces, verify-before-done for the overall discipline |
+| Cross-cutting refactor touching many files | **`verify-before-done`** — L2 or L3 with the full system |
+| Deployment, config, infrastructure | **`verify-before-done`** — L2 observed deploy |
+
+**Short rule:** `max:tdd` for testable layers (clean interfaces, deterministic, in-process). `verify-before-done` for everything else. If both apply, use tdd for the logic and verify-before-done for the end-to-end check.
+
+---
+
 ## Integration with other skills
 
-**From `max:tdd`:** TDD's GREEN step already requires watching the test pass. verify-before-done extends that discipline to non-TDD work (UI, integration, cross-cutting changes). Use TDD for testable code; use verify-before-done for everything else.
+**From `max:tdd`:** TDD's GREEN step already requires watching the test pass. verify-before-done extends that discipline to non-TDD work (UI, integration, cross-cutting changes).
 
 **From `max:grill-me`:** grill-me's Acceptance dimension scores how verifiable the claim is. Low scores on Acceptance mean the spec will be hard to verify — tighten the spec before you try to verify the implementation.
 
