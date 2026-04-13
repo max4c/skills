@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.5.0 — 2026-04-13
+
+Added `multi-grill` — grill-me orchestration that runs Claude and Codex as interrogator/answerer pairs so the user reviews the result instead of answering questions live.
+
+### Added
+
+- **multi-grill** — Two modes: relay (iterative Claude↔Codex back-and-forth via `task --resume-last`) and parallel (two swapped streams, each a one-shot Codex call, then merged). Same five-dimension ambiguity rubric as `grill-me`. Tags every resolved decision `[AGREED]` / `[PLAUSIBLE DEFAULT]` / `[NEEDS MAX]` (relay) or `[CONSENSUS]` / `[CONFLICT]` / `[A-only]` / `[B-only]` (parallel) so follow-up attention goes to real judgment calls only. Conservative UNCERTAIN discipline when the artifact references external context. Natural follow-up is `grill-me` scoped to `[NEEDS MAX]` items. **Requires the `openai-codex` plugin** — invokes `codex-companion.mjs task` directly via Bash. First skill in this plugin with a hard external dependency; without Codex installed, the skill will fail on first run with a clear error pointing at the missing script.
+
 ## v0.4.0 — 2026-04-10
 
 Added `release-plugin` — a new skill that encodes the discipline of shipping Claude Code plugin updates. Born from the pain of learning (the hard way) that the plugin updater gates on the `version` field in `plugin.json`, not git SHAs, and that bugbook-style multi-branch repos with ongoing WIP need a worktree to avoid disturbing working state.

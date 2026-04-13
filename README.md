@@ -9,6 +9,7 @@ Inspired by [Matt Pocock's skills](https://github.com/mattpocock/skills), the [O
 | Skill | What it does |
 |---|---|
 | `grill-me` | Interview the user relentlessly about a plan, spec, or ticket. Produces a per-dimension ambiguity report and gate. |
+| `multi-grill` | Auto-grill a plan, spec, or ticket by running Claude and Codex as interrogator/answerer pairs — relay (iterative) or parallel (two swapped streams merged). User reviews the pre-chewed result instead of sitting through the interview. Requires the `openai-codex` plugin. |
 | `write-prd` | Turn a vague idea into a grounded PRD. Codebase exploration, Socratic interview, grill gate before exit. |
 | `tdd` | Test-driven development with red-green-refactor discipline and vertical-slice tracer bullets. Includes "when NOT to TDD" for UI code. |
 | `tech-spec` | Turn a PRD into a technical implementation spec. Module decomposition with deep-module emphasis, tracer-bullet sequencing, grill gate. |
