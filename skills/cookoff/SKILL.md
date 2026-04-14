@@ -1,6 +1,6 @@
 ---
 name: cookoff
-description: Auto-grill a plan, spec, or ticket by running Claude and Codex as interrogator/answerer pairs instead of interviewing the user. Two modes — relay (iterative back-and-forth between Claude and Codex) and parallel (two swapped streams merged into one spec). Produces a pre-chewed artifact where the user only reviews the result, not sits through the interview. Use this skill whenever the user says "cookoff", "pre-grill this", "have codex grill it", "dual grill", "grill this without me", "run grill-me with codex", "cross-examine this plan", or wants the ambiguity-resolution work done autonomously before they review. Also use when the user has a plan/spec/PRD that would normally go through max:grill-me but explicitly wants to skip being interviewed themselves.
+description: Auto-grill a plan, spec, or ticket by running Claude and Codex as interrogator/answerer pairs instead of interviewing the user. Two modes — relay (iterative back-and-forth between Claude and Codex) and parallel (two swapped streams merged into one spec). Produces a pre-chewed artifact where the user only reviews the result, not sits through the interview. Use this skill whenever the user says "cookoff", "pre-grill this", "have codex grill it", "dual grill", "grill this without me", "run grill-me with codex", "cross-examine this plan", or wants the ambiguity-resolution work done autonomously before they review. Also use when the user has a plan/spec/PRD that would normally go through max:grill-me but explicitly wants to skip being interviewed themselves. Supports `--to-tickets` to emit the grilled spec as Dahso Agent Tickets ready for `/go`, and `--to-tickets --go` to chain straight to `dahso:go` without a review pause.
 ---
 
 # Cookoff
@@ -51,6 +51,10 @@ Typical user inputs:
 - `/cookoff <path>` — grill the file at `<path>`
 - `/cookoff relay <path>` — force relay mode
 - `/cookoff parallel <path>` — force parallel mode
+- `/cookoff --to-tickets` — after grilling, decompose the spec into Dahso Agent Tickets and stop (see `--to-tickets flag` section)
+- `/cookoff --to-tickets --go` — same, then chain immediately to `dahso:go`
+
+Flags combine with modes: `/cookoff relay <path> --to-tickets --go` is valid.
 
 Before starting, confirm the artifact you're about to grill in one line ("Grilling: <path or short description>") so the user can redirect if you picked wrong.
 
@@ -242,11 +246,151 @@ Always end the response with:
 
 ---
 
+## --to-tickets flag
+
+When `--to-tickets` is passed, after producing the grilled spec, decompose it into Dahso tickets so `dahso:go` has something to execute against. The intended pipeline is: idea → `max:write-prd` → `max:cookoff --to-tickets` → `dahso:go` → wake up, review the worktree, merge or delete.
+
+### Decomposition rule
+
+Parse the grilled spec's top-level numbered sections (e.g. "1. Data model", "2. Conflict resolution") and decompose into tickets using this logic:
+
+- **Every numbered section becomes at least one ticket, regardless of tag.** Wrong code in a worktree is cheap to delete; skipped work is a wasted night. Don't self-censor `[NEEDS MAX]` sections — turn them into tickets with annotated defaults (see below).
+- **Split sections that span multiple layers** into separate tickets. Signals that a section should split: it mentions different directories (Swift client vs. Cloudflare Worker vs. CLI), touches different files, or contains two distinct implementation units described back-to-back.
+- **The success criteria / acceptance test / demo section becomes its own dedicated ticket.** Title: "Write integration tests for <feature>" or "Verify <feature> end-to-end". Priority: High. The spec's pass/fail criteria become the ticket's `## Done When`.
+
+### Tag handling inside the ticket body
+
+Each ticket's body is built from the corresponding spec section plus tag-specific preamble:
+
+- `[AGREED]` — copy the section content into `## What` verbatim. No extra note.
+- `[PLAUSIBLE DEFAULT]` — copy into `## What` verbatim, then append an `## Agent Note` section: "Based on a plausible default, not explicitly confirmed by the user. If <X> is wrong, change to <Y>."
+- `[NEEDS MAX]` — pick the most reasonable option yourself, write the ticket body around that choice, and append an `## Agent Note` section:
+  ```
+  Agent chose <X> over <Y> because <reason>.
+  This was unresolved in the original spec ([NEEDS MAX]).
+  Review and revert/adjust if the other option was preferred.
+  ```
+
+Do NOT skip `[NEEDS MAX]` sections. Ship a default and flag it — that's the whole point of this flag.
+
+### Priority assignment
+
+- Infrastructure / data-model / schema / migration tickets → **High** (everything else depends on them)
+- Integration test / acceptance-criteria tickets → **High** (should run early to validate)
+- Core feature tickets → **Medium**
+- UX / banners / error messages / nice-to-have polish → **Low**
+
+### Database setup
+
+Reuse the cache owned by `dahso:flow` at `~/.dahso/flow-cache.json`:
+
+```json
+{ "agent_projects": "<db_id>", "agent_tickets": "<db_id>" }
+```
+
+If the cache exists, read it. If not, or if a cached ID fails:
+
+```bash
+dahso db list
+```
+
+Find `Agent Projects` and `Agent Tickets`, then `mkdir -p ~/.dahso && <write the cache>`.
+
+If the `dahso` CLI isn't on PATH, fall back to `swift run DahsoCLI` from the repo root. The argument syntax is identical.
+
+### Create the project
+
+Derive a short project name from the grilled spec's Goal / opening section. Keep it under 60 characters.
+
+```bash
+dahso create "Agent Projects" \
+  --set "Name=<project name>" \
+  --set "Status=Active" \
+  --body-file - <<'EOF'
+<one-paragraph project summary extracted from the spec's goal/overview>
+
+Source: cookoff (grilled <date>)
+EOF
+```
+
+Capture the returned `row_id` — every ticket below references it via the `Project` relation.
+
+### Create each ticket
+
+For each decomposed ticket:
+
+```bash
+cat <<'SPEC' | dahso create "Agent Tickets" \
+  --set "Name=<ticket title>" \
+  --set "Status=To Do" \
+  --set "Project=<project_row_id>" \
+  --set "Priority=<High|Medium|Low>" \
+  --set "Files=<comma-separated file paths if the spec section mentioned any>" \
+  --set "Source=cookoff" \
+  --body-file -
+## What
+<spec section content, including any [AGREED] decisions, verbatim>
+
+## Done When
+<specific, observable outcomes derived from the spec's success criteria or the section's own acceptance language — not "it works", but "rows created on machine A appear on machine B within 15s">
+
+## Agent Note
+<only present for [PLAUSIBLE DEFAULT] and [NEEDS MAX] tags — see "Tag handling" above>
+SPEC
+```
+
+Save every returned `row_id`. Ticket titles must be imperative ("Add workspace_members table", not "workspace_members table") and under 80 characters.
+
+### Detect file overlaps
+
+After all tickets are created, scan their `Files` fields. For each pair of tickets that shares at least one file, populate both `Linked` fields:
+
+```bash
+# Pair sharing files
+dahso update "Agent Tickets" <row_a> --set "Linked=<row_b>"
+dahso update "Agent Tickets" <row_b> --set "Linked=<row_a>"
+
+# Ticket A shares files with both B and C
+dahso update "Agent Tickets" <row_a> --set "Linked=<row_b>,<row_c>"
+```
+
+Linked tickets must be committed together — they touch the same files and partial commits leave the tree inconsistent. `dahso:go` uses this field to decide lane grouping.
+
+### Print summary
+
+After creation, print a scannable summary:
+
+```
+Created N tickets under project "<project name>" (row <project_row_id>):
+
+  1. [High]   Add workspace_members D1 schema — shared-worker/schema.sql
+  2. [High]   Implement R2 client in Dahso — Sources/DahsoCore/Sync/*.swift  <-> linked to #3
+  3. [Medium] Wire sync to FSEvents watcher — Sources/DahsoCore/Sync/*.swift, Sources/Dahso/Services/WorkspaceWatcher.swift  <-> linked to #2
+  4. [Low]    Offline banner UI — Sources/Dahso/Views/Components/SyncStatusBanner.swift
+  5. [High]   Integration test: create-update-delete across two machines — Tests/SharedWorkspaceTests/*.swift
+
+Of these, M are based on [NEEDS MAX] items (agent picked defaults):
+  - #2: chose opaque bearer tokens over JWT because the spec's `workspace_members` table already carries `token_hash`. Flip to JWT if revocation needs to be stateless.
+
+Review in Dahso before `/go`, or proceed directly.
+```
+
+### --go follow-through
+
+If invoked as `--to-tickets --go`, invoke `dahso:go` immediately after printing the summary. No review pause. The `/go` run logs its own progress.
+
+If invoked as just `--to-tickets` (no `--go`), stop here so the user can review in the Dahso app first.
+
+Do NOT invoke `dahso:go` unless `--go` was explicitly passed alongside `--to-tickets`.
+
+---
+
 ## Exit discipline
 
 - The user can override at any time ("enough", "ship it", "good enough") — exit immediately, print the report anyway so the override is informed
 - If Codex errors out mid-stream, stop and report the error — don't fall back to doing the grill yourself (that defeats the point of the skill)
 - Never mark an answer `[AGREED]` or `[CONSENSUS]` to paper over uncertainty — if in doubt, use `[NEEDS MAX]`
+- If ticket creation fails during `--to-tickets` (CLI error, database not found, malformed schema), print the error and the full grilled spec so the user can create tickets manually. Do NOT retry ticket creation in a loop, and do NOT fall through to `dahso:go` with a partial ticket set.
 
 ## Composition
 

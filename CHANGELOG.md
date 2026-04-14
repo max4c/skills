@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.7.0 — 2026-04-13
+
+Added `--to-tickets` flag to `cookoff` — bridges the grilled-spec-to-`dahso:go` gap so an autonomous pipeline can run from idea to worktree without a human review stop in the middle.
+
+### Added
+
+- **cookoff `--to-tickets`** — after producing the grilled spec, decomposes its top-level numbered sections into Dahso Agent Tickets under a new Active project in the Agent Projects database. Every section becomes at least one ticket regardless of tag: `[AGREED]` copies verbatim, `[PLAUSIBLE DEFAULT]` gets an `## Agent Note` flagging the unconfirmed choice, and `[NEEDS MAX]` gets a ticket with an agent-chosen default plus a note recording which option was picked and why. Skipping `[NEEDS MAX]` is explicitly disallowed — wrong code in a worktree is cheap to delete; skipped work is a wasted night. Sections spanning multiple layers (client vs. Worker vs. CLI) split into separate tickets. The spec's success-criteria / acceptance section becomes a dedicated High-priority integration-test ticket. File overlaps across tickets populate `Linked` fields for `dahso:go`'s lane grouping. Reuses the database-ID cache owned by `dahso:flow` at `~/.dahso/flow-cache.json`.
+- **cookoff `--to-tickets --go`** — chains straight to `dahso:go` after ticket creation, skipping the review pause. `--to-tickets` alone stops after the summary so the user can review tickets in the Dahso app first.
+
+### Changed
+
+- **cookoff exit discipline** — added a rule: on ticket-creation failure (CLI error, database not found, malformed schema), print the error and the full grilled spec so the user can create tickets manually. Do not retry in a loop, and do not fall through to `dahso:go` with a partial ticket set.
+
 ## v0.6.0 — 2026-04-13
 
 Renamed `multi-grill` → `cookoff`.
