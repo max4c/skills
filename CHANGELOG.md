@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.0 — 2026-04-13
+
+Renamed `multi-grill` → `cookoff`.
+
+### Changed
+
+- **cookoff** (renamed from `multi-grill`) — skill name, heading, description triggers, and all `/multi-grill` invocation examples updated. Behavior unchanged. Breaking for anyone with `/multi-grill` muscle memory; update to `/cookoff`.
+
 ## v0.5.0 — 2026-04-13
 
 Added `multi-grill` — grill-me orchestration that runs Claude and Codex as interrogator/answerer pairs so the user reviews the result instead of answering questions live.

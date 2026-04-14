@@ -1,9 +1,9 @@
 ---
-name: multi-grill
-description: Auto-grill a plan, spec, or ticket by running Claude and Codex as interrogator/answerer pairs instead of interviewing the user. Two modes — relay (iterative back-and-forth between Claude and Codex) and parallel (two swapped streams merged into one spec). Produces a pre-chewed artifact where the user only reviews the result, not sits through the interview. Use this skill whenever the user says "multi-grill", "pre-grill this", "have codex grill it", "dual grill", "grill this without me", "run grill-me with codex", "cross-examine this plan", or wants the ambiguity-resolution work done autonomously before they review. Also use when the user has a plan/spec/PRD that would normally go through max:grill-me but explicitly wants to skip being interviewed themselves.
+name: cookoff
+description: Auto-grill a plan, spec, or ticket by running Claude and Codex as interrogator/answerer pairs instead of interviewing the user. Two modes — relay (iterative back-and-forth between Claude and Codex) and parallel (two swapped streams merged into one spec). Produces a pre-chewed artifact where the user only reviews the result, not sits through the interview. Use this skill whenever the user says "cookoff", "pre-grill this", "have codex grill it", "dual grill", "grill this without me", "run grill-me with codex", "cross-examine this plan", or wants the ambiguity-resolution work done autonomously before they review. Also use when the user has a plan/spec/PRD that would normally go through max:grill-me but explicitly wants to skip being interviewed themselves.
 ---
 
-# Multi-Grill
+# Cookoff
 
 Run grill-me style interrogation between Claude and Codex so the user only reviews the output instead of answering questions live. Uses the same five-dimension ambiguity rubric as `max:grill-me` (Goals, Acceptance, Boundaries, Alternatives, Assumptions) but with an AI playing the answerer — and in parallel mode, playing a second griller too.
 
@@ -12,8 +12,8 @@ The point: extract the easy 80% of a `grill-me` pass autonomously. Consensus def
 ## When to use
 
 - User has an artifact (plan, spec draft, ticket, PRD) and wants it stress-tested without sitting through the interview
-- Explicit invocation: "multi-grill", "pre-grill", "have the AIs grill it", "/multi-grill"
-- As a pre-filter before `max:grill-me`: multi-grill resolves the obvious questions; follow up with `max:grill-me` on only the `[NEEDS MAX]` items
+- Explicit invocation: "cookoff", "pre-grill", "have the AIs grill it", "/cookoff"
+- As a pre-filter before `max:grill-me`: cookoff resolves the obvious questions; follow up with `max:grill-me` on only the `[NEEDS MAX]` items
 
 ## When NOT to use
 
@@ -47,10 +47,10 @@ Default: if the user doesn't specify, pick relay for short artifacts (<200 lines
 
 Typical user inputs:
 
-- `/multi-grill` — use whatever plan/spec is in the current conversation
-- `/multi-grill <path>` — grill the file at `<path>`
-- `/multi-grill relay <path>` — force relay mode
-- `/multi-grill parallel <path>` — force parallel mode
+- `/cookoff` — use whatever plan/spec is in the current conversation
+- `/cookoff <path>` — grill the file at `<path>`
+- `/cookoff relay <path>` — force relay mode
+- `/cookoff parallel <path>` — force parallel mode
 
 Before starting, confirm the artifact you're about to grill in one line ("Grilling: <path or short description>") so the user can redirect if you picked wrong.
 
@@ -58,7 +58,7 @@ Before starting, confirm the artifact you're about to grill in one line ("Grilli
 
 ## Calling Codex
 
-Invoke Codex directly via Bash. Don't go through `codex:codex-rescue` — that's a one-shot forwarder designed for single rescue requests; multi-grill owns its own Codex conversation.
+Invoke Codex directly via Bash. Don't go through `codex:codex-rescue` — that's a one-shot forwarder designed for single rescue requests; cookoff owns its own Codex conversation.
 
 **Resolve the script path first:**
 
@@ -88,7 +88,7 @@ node "$CODEX_SCRIPT" task --resume-last "<next prompt>"
 
 Rules:
 - Leave `--model` and `--effort` unset unless the user specified them
-- Don't pass `--write` — multi-grill is a read/analyze operation, not a code-edit operation
+- Don't pass `--write` — cookoff is a read/analyze operation, not a code-edit operation
 - If Codex returns an error or empty output, stop and report — don't fabricate answers
 
 ---
@@ -250,6 +250,6 @@ Always end the response with:
 
 ## Composition
 
-Multi-grill is user-facing orchestration, not a subroutine. Don't invoke it from inside other skills (unlike `max:grill-me`, which is designed for subroutine use).
+Cookoff is user-facing orchestration, not a subroutine. Don't invoke it from inside other skills (unlike `max:grill-me`, which is designed for subroutine use).
 
-Natural follow-up: after multi-grill, if `[NEEDS MAX]` items remain, invoke `max:grill-me` scoped to just those items for a targeted live interview.
+Natural follow-up: after cookoff, if `[NEEDS MAX]` items remain, invoke `max:grill-me` scoped to just those items for a targeted live interview.
